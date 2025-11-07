@@ -1,27 +1,17 @@
+const http = require('http');
 const WebSocket = require('ws');
-const PORT = process.env.PORT || 5000;
-const wsServer = new WebSocket.Server({ port: PORT });
 
-wsServer.on('connection', function (socket) {
-  // Some feedback on the console
-  console.log('A client just connected.');
+const PORT = process.env.PORT || 8080;
 
-  // Attach some behavior to the incoming socket
-  socket.on('message', function (msg) {
-    console.log('Received message from client: ' + msg);
-    // socket.send('Take this back: ' + msg);
-
-    // Broadcast that message to all connected clients
-    wsServer.clients.forEach(function (client) {
-      if (client !== socket) {
-        client.send(msg);
-      }
-    });
-  });
-
-  socket.on('close', function () {
-    console.log('Client disconnected');
-  });
+const server = http.createServer((req, res) => {
+  if (req.url === '/healthz') { res.writeHead(200); res.end('ok'); return; }
+  res.writeHead(200); res.end('signaling alive');
 });
 
-console.log(new Date() + ' Server is listening on port ' + PORT);
+const wss = new WebSocket.Server({ server });
+wss.on('connection', (socket) => {
+  // TODO: your signaling logic
+  socket.on('message', (msg) => {/* ... */});
+});
+
+server.listen(PORT, () => console.log('listening on', PORT));
